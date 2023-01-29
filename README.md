@@ -1,2 +1,7 @@
-# pysimplenetscan_gui
-a simple gui network scanner for ping web port 80 and 443. 
+Please DO NOT use it in any pulbic network!!!
+USE IT WITH YOUR OWN RISK!!!
+
+Included Moduls:
+TomSchimansky/CustomTkinter
+alessandromagg/pythonping
+bauerj/mac_vendor_lookup
