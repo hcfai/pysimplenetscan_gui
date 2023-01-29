@@ -229,11 +229,7 @@ Add optional scan target
 Version 0.72
 Clean temp file when quite
 Add interfaces option
-Version 0.6-6
-Fix port scan dupilica
-Add fastscan Options; Fix console scroll
-Move Info to wellcom window; Fix Quit issue when scan is running
-Fix clean botton; Change to using subprocess get arp table
+Change to using subprocess get arp table
 Version 0.6
 Add support for mac address lookup
 Version 0.5

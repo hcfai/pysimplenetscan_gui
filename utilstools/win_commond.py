@@ -2,7 +2,7 @@ from subprocess import check_output, run
 from os import mkdir
 
 from functools import wraps
-from time import asctime,localtime,time
+from time import time
 def timer_cont(org_func):
     @wraps(org_func)
     def wrapper(*args, **kwargs):
