@@ -1,3 +1,5 @@
+Windwos GUI App to scan local network
+
 Please DO NOT use it in any pulbic network!!!
 USE IT WITH YOUR OWN RISK!!!
 
