@@ -25,6 +25,11 @@ class IPframe(customtkinter.CTkFrame):
         self.ip_input_2.insert(0, endip)
         self.ip_input_2.configure(state='disabled')
 
+    def change_entrystate(self, entry: customtkinter.CTkEntry, cbox: customtkinter.CTkCheckBox):
+        state = cbox.get()
+        if state == 1: entry.configure(state='normal')
+        else: entry.configure(state='disabled')
+
 class GuiApp(customtkinter.CTk):
     def __init__(self, *args, title: str="App", **kwargs):
         super().__init__(*args, **kwargs)
@@ -65,8 +70,8 @@ class GuiApp(customtkinter.CTk):
         self.setting_om_int.pack(padx=10, pady=(0,5),)
         self.cbox_customscan = customtkinter.CTkCheckBox(self.frame_sideframe)
         self.cbox_customscan.pack(padx=10, pady=5, side='bottom')
-        self.setting_label_customscan = IPframe(self.frame_sideframe, fg_color="transparent")
-        self.setting_label_customscan.pack(padx=10, pady=5, side='bottom')
+        self.setting_customscan = IPframe(self.frame_sideframe, fg_color="transparent")
+        self.setting_customscan.pack(padx=10, pady=5, side='bottom')
 
         ## scan options
         self.frame_scanoption = customtkinter.CTkFrame(self, fg_color="transparent")
@@ -143,6 +148,8 @@ class GuiApp(customtkinter.CTk):
         self.cbox_https.configure(state="disabled")
         self.cbox_skipping.configure(state="disabled")
         self.setting_om_int.configure(state='disabled')
+        self.cbox_customscan.configure(state='disabled')
+
         self.progressbar.start()
         self.progressbar.grid(row=3, column=0, columnspan=4, sticky="ew")
 
@@ -158,6 +165,7 @@ class GuiApp(customtkinter.CTk):
         self.cbox_https.configure(state="normal")
         self.cbox_skipping.configure(state="normal")
         self.setting_om_int.configure(state='normal')
+        self.cbox_customscan.configure(state='normal')
 
     ## Confirm box
     def confirm_popup(self, _note: str=None):

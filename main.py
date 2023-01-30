@@ -25,26 +25,22 @@ def get_all_interface() -> list:
 def get_ScanningRangebyActiveInterface():
     scanNetwork = app.active_interface['ipv4_addr'].network
     fristAddr = ipv4_helper.ipv4_addone(scanNetwork.network_address)
-    lastAddr = ipv4_helper.ipv4_minone(scanNetwork.broadcast_address)
-    gui.setting_label_customscan.update_iprangeEntry(fristAddr, lastAddr)
-
-def set_ScanningRange(startip: str, endip:str):
-    pass
+    lastAddr = ipv4_helper.ipv4_devone(scanNetwork.broadcast_address)
+    gui.setting_customscan.update_iprangeEntry(fristAddr, lastAddr)
 
 
-## Watchdogs
-def scanner_watchdog() -> None:
-    print("sacnning watchdog start")
+## function for gui
+def scanner_isrunning() -> None:
     gui.progressbar_show()
     while app.scanning:
         sleep(1)
-    print("sacnning watchdog end")
     gui.progressbar_hide()
 
-def popup_watchdog():
+def popupwindows_close():
     gui.destroy()
 
 def killall():
+    ## shell is true so becareful
     win_commond.cleanup(filename='ipconfig')
     win_commond.cleanup(filename='arp')
     gui.destroy()
@@ -53,7 +49,6 @@ def killall():
 
 ## ICMP Echo Threading
 def start_std_icmpping():
-    print(app.active_interface['ipv4_addr'])
     for ip in app.active_interface['ipv4_addr'].network.hosts():
         thread = threading.Thread(target=app.icmpping_ping, args=(ip,))
         thread.start()
@@ -62,10 +57,24 @@ def start_std_icmpping():
     for thread in threadhandling: thread.join()
     for host in app.reponded_hosts: print(f"{host['host']} is UP")
 
-def start_ranged_icmpping():
-    print(app.active_interface['ipv4_addr'])
-    pass
+def start_custom_icmpping():
+    start_ip = gui.setting_customscan.ip_input_1.get()
+    end_ip = gui.setting_customscan.ip_input_2.get()
+    scantargets = ipv4_helper.ipv4_rangecheck(start_ip, end_ip)
+    if not isinstance(scantargets, ipv4_helper.GeneratorType):
+        gui.console_textbox_addnewline(scantargets)
+        app.setting['correctiprange'] = False
+        return
+    else: app.setting['correctiprange'] = True
+    for ip in scantargets:
+        thread = threading.Thread(target=app.icmpping_ping, args=(ip,))
+        thread.start()
+        threadhandling.append(thread)
+        sleep(0.01)
+    for thread in threadhandling: thread.join()
+    for host in app.reponded_hosts: print(f"{host['host']} is UP")
 
+## scanning
 def start_maclookup():
     filename = win_commond.cmd_winsave('arp -a')
     ip2mac_dict = win_commond.sort_win_arp(filename)
@@ -82,19 +91,30 @@ def start_tcpping():
 ## Scanning Thread
 def start_scanning():
     app.scanning = True
-    gui.console_textbox_addnewline(f"[INFO] new scanning started at {strftime('%Y/%m/%d - %H:%M:%S', localtime())} | Interface: {app.active_interface['ipv4_addr']} | {app.active_interface['ipv4_addr'].network.num_addresses-2} hosts to scan")
-    if not app.setting['skipping']:
+
+    if app.setting['skipping']:
+        gui.console_textbox_addnewline(f"[INFO] new scanning started at {strftime('%Y/%m/%d - %H:%M:%S', localtime())} | Skipping Ping, Try Connect to {len(app.reponded_hosts)} Hosts")
+        pass
+    elif app.setting['customscantarget']:
+        gui.console_textbox_addnewline(f"[INFO] new scanning started at {strftime('%Y/%m/%d - %H:%M:%S', localtime())} | Scanning from {gui.setting_customscan.ip_input_1.get()} to {gui.setting_customscan.ip_input_2.get()}")
+        icmp_thread = threading.Thread(target=start_custom_icmpping)
+        icmp_thread.start()
+        icmp_thread.join()
+    else:
+        gui.console_textbox_addnewline(f"[INFO] new scanning started at {strftime('%Y/%m/%d - %H:%M:%S', localtime())} | Interface: {app.active_interface['ipv4_addr']} | {app.active_interface['ipv4_addr'].network.num_addresses-2} hosts to scan")
         icmp_thread = threading.Thread(target=start_std_icmpping)
         icmp_thread.start()
         icmp_thread.join()
-        print('icmp done')
     
+    if app.setting['correctiprange'] == False: 
+        app.scanning = False
+        return
+
     if app.setting['showdetail']:
         gui.console_textbox_2_addnewline("[WARN] Start getting mac address and vendor")
         maclookup_thread = threading.Thread(target=start_maclookup)
         maclookup_thread.start()
         maclookup_thread.join()
-        print('maclookup done')
 
     for host in app.reponded_hosts:
         if app.setting['showdetail']:
@@ -107,7 +127,6 @@ def start_scanning():
         tcp_thread = threading.Thread(target=start_tcpping)
         tcp_thread.start()
         tcp_thread.join()
-        print('tcp done')
 
     for host in app.reponded_hosts:
         if host['http']:
@@ -116,14 +135,14 @@ def start_scanning():
     for host in app.reponded_hosts:
         if host['https']:
             gui.console_textbox_addnewline(f"[HTPS] webpage founded: https://{host['host']}:443")
-            
+
     app.scanning = False
 
 ## Button Funcktion
 def buttonFunc_startPing():
     print("Starting Pining")
     threading.Thread(target=start_scanning).start()
-    threading.Thread(target=scanner_watchdog).start()
+    threading.Thread(target=scanner_isrunning).start()
 
 def buttonFunc_popupcomfrim():
     get_all_interface()
@@ -140,6 +159,12 @@ def buttonFunc_clean():
     gui.console_textbox_clear()
     gui.console_textbox_2_clear()
     app.reponded_hosts.clear()
+
+def cboxFunc_enableCustomScanTarget():
+    gui.cbox_customscan.configure(state='normal')
+    gui.setting_customscan.change_entrystate(gui.setting_customscan.ip_input_1, gui.cbox_customscan)
+    gui.setting_customscan.change_entrystate(gui.setting_customscan.ip_input_2, gui.cbox_customscan)
+    gui.changesetting(gui.cbox_customscan, app, 'customscantarget')
 
 def set_infobox(ip, description,netcls):
     gui.console_textbox_2_addnewline(f'[WARN] Active Interface: {description} ---> {app.active_interface["ipv4_addr"].with_prefixlen}')
@@ -196,7 +221,7 @@ def gui_defualttext():
     gui.cbox_https.configure(text="HTTPS Scan")
     gui.cbox_skipping.configure(text="Skip Ping")
     gui.console_label.configure(text="Output")
-    gui.setting_label_customscan.label.configure(text="Scan Range (Working on)")
+    gui.setting_customscan.label.configure(text="Scaner Target Range")
 
 ## Link Button to function
 def gui_linkbutton():
@@ -209,7 +234,8 @@ def gui_linkbutton():
     gui.cbox_http.configure(command=lambda: gui.changesetting(gui.cbox_http, app, 'httpscan'))
     gui.cbox_https.configure(command=lambda: gui.changesetting(gui.cbox_https, app, 'httpsscan'))
     gui.cbox_skipping.configure(command=lambda: gui.changesetting(gui.cbox_skipping, app, 'skipping'))
-    gui.popupwindow.protocol("WM_DELETE_WINDOW", popup_watchdog)
+    gui.cbox_customscan.configure(command=cboxFunc_enableCustomScanTarget)
+    gui.popupwindow.protocol("WM_DELETE_WINDOW", popupwindows_close)
     gui.protocol("WM_DELETE_WINDOW", killall)
 
 

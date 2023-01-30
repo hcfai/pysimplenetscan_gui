@@ -2,9 +2,8 @@ from pythonping import ping
 from mac_vendor_lookup import MacLookup, BaseMacLookup
 
 import socket
-# import subprocess
 from re import compile
-from ipaddress import IPv4Network, IPv4Address, IPv4Interface
+from ipaddress import IPv4Address, IPv4Interface
 
 MAC_PATTERN = compile(r'(([0-9a-fA-F]){2}[-:]){5}([0-9a-fA-F]){2}')
 
@@ -19,7 +18,9 @@ class Scanner():
             'skipping': False,
             'showdetail': False, 
             'httpscan': False,
-            'httpsscan': False,}
+            'httpsscan': False,
+            'customscantarget': False,
+            'correctiprange': True}
         self.reponded_hosts = []
         self.interfaces = []
         self.ip2mac_dict = dict()
@@ -66,7 +67,6 @@ class Scanner():
             return 'A'
         else:
             return 'ERROR'
-
 
     ## MAC Address lookup
     def get_mac(self) -> str:
