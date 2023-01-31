@@ -9,7 +9,7 @@ Please DO NOT use it in any pulbic network!!!
 USE IT WITH YOUR OWN RISK!!!
 # pyinstaller prepacked exe
 
-see dict/
+see dist/
 
 
 # Included Moduls:
