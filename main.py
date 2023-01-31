@@ -245,7 +245,7 @@ def gui_linkbutton():
     gui.protocol("WM_DELETE_WINDOW", killall)
 
 
-NOTE = """Simple Network Scanner for AV Technician BATE v0.83
+NOTE = """Simple Network Scanner for AV Technician BATE v0.84
 Please DO NOT use it in any pulbic network!!!
 USE IT WITH YOUR OWN RISK!!!
 
@@ -256,8 +256,8 @@ bauerj/mac_vendor_lookup
 
 Regards,
 
-Version 0.83
-Add optional scan target; Fix not start when vpn ran
+Version 0.84
+Add optional scan target; Fix unalbe to start cause by fail to catch interfaces information
 Version 0.72
 Clean temp file when quite
 Add interfaces option
@@ -273,7 +273,7 @@ Add support for http and https scan
 
 if __name__ == "__main__":
     threadhandling, nic_list = [], []
-    gui = mainctk.GuiApp(title="Simple Network Scanner for AV Technician BATE v0.83")
+    gui = mainctk.GuiApp(title="Simple Network Scanner for AV Technician BATE v0.84")
     app = scanner.Scanner(guiconsole=gui.console_textbox_2_addnewline)
     gui_defualttext()
     gui_linkbutton()

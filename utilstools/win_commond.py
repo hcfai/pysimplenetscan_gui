@@ -87,6 +87,7 @@ def sort_win_ipconfig(filename: str='ipconfig', path: str='temp') -> list:
             nic_dict['mac'] = line.split(' :')[1].strip().lower()
             continue
     print('Done')
+    nic_list.append(nic_dict)
     return nic_list
 
 
@@ -107,8 +108,14 @@ def sort_win_arp(filename: str='arp', path: str='temp') -> dict:
     return ip2mac_dict
 
 if __name__ == '__main__':
-    filename = cmd_winsave('arp -a')
-    sort_win_arp()
 
-    # filename = cmd_winsave('ipconfig /all')
-    # nic_list = sort_win_ipconfig(filename)
+    filename = cmd_winsave('ipconfig /all')
+    nic_list = sort_win_ipconfig(filename)
+    for nic in nic_list:
+        print(nic)
+    print('***')
+    for _ in range(len(nic_list)):
+        nic = nic_list.pop(0)
+        if 'ipv4_addr' in nic: print(nic)
+    
+    input()
