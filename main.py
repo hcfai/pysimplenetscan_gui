@@ -194,11 +194,17 @@ def optionmenu_interface(new_interface: str):
     ip, description, netcls= app.set_activeinterface(new_interface)
     set_infobox(ip, description, netcls)
 
+
 def set_default_interface():
     print("Geting Network Infomation")
-    ip, description, netcls = app.set_defualtinterface()
-    set_infobox(ip, description, netcls)
-    gui.setting_om_int.set(f"{description}  ---> {ip}") 
+    try:
+        ip, description, netcls = app.set_defualtinterface()
+    except Exception as e:
+        gui.setting_customscan.update_iprangeEntry("127.0.0.1", "127.0.0.1")
+        print(e)
+    else:
+        set_infobox(ip, description, netcls)
+        gui.setting_om_int.set(f"{description}  ---> {ip}") 
 
 def buttonFunc_testing():
     print(app.interfaces)
@@ -212,10 +218,10 @@ def gui_defualttext():
     gui.button_cleanConsole.configure(text="Clean All")
     gui.button_savetxt.configure(text="Save to .txt") 
     gui.setting_label_int.configure(text="Interface Info") 
-    gui.setting_label_intchange.configure(text="Change Interface") 
+    gui.setting_label_intchange.configure(text="Scan Interface") 
     gui.setting_om_int.configure(values=["Scan Interfaces"], command=optionmenu_interface) 
     gui.cbox_customscan.configure(text='Custom Scan Range')
-    gui.setting_om_int.set("Scan Interfaces") 
+    gui.setting_om_int.set("Select Interface") 
     gui.cbox_detail.configure(text="MAC Lookup")
     gui.cbox_http.configure(text="HTTP Scan")
     gui.cbox_https.configure(text="HTTPS Scan")
@@ -239,7 +245,7 @@ def gui_linkbutton():
     gui.protocol("WM_DELETE_WINDOW", killall)
 
 
-NOTE = """Simple Network Scanner for AV Technician BATE v0.82
+NOTE = """Simple Network Scanner for AV Technician BATE v0.83
 Please DO NOT use it in any pulbic network!!!
 USE IT WITH YOUR OWN RISK!!!
 
@@ -250,8 +256,8 @@ bauerj/mac_vendor_lookup
 
 Regards,
 
-Version 0.82
-Add optional scan target
+Version 0.83
+Add optional scan target; Fix not start when vpn ran
 Version 0.72
 Clean temp file when quite
 Add interfaces option
@@ -267,7 +273,7 @@ Add support for http and https scan
 
 if __name__ == "__main__":
     threadhandling, nic_list = [], []
-    gui = mainctk.GuiApp(title="Simple Network Scanner for AV Technician BATE v0.82")
+    gui = mainctk.GuiApp(title="Simple Network Scanner for AV Technician BATE v0.83")
     app = scanner.Scanner(guiconsole=gui.console_textbox_2_addnewline)
     gui_defualttext()
     gui_linkbutton()
