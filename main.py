@@ -7,9 +7,13 @@ from nettools import scanner
 from utilstools import win_commond, ipv4_helper
 
 ## getipconfig
-def get_all_interface() -> list:
+def get_all_interface() -> bool:
     filename = win_commond.cmd_winsave('ipconfig -all')
-    nic_list = win_commond.sort_win_ipconfig(filename)
+    
+    if filename != None:
+        nic_list = win_commond.sort_win_ipconfig(filename)
+    else:
+        return False
 
     for _ in range(len(nic_list)):
         nic = nic_list.pop(0)
@@ -19,7 +23,13 @@ def get_all_interface() -> list:
     for nic in app.interfaces:
         nic_opntion.append(f"{nic['description']}  ---> {nic['ipv4_addr']}")
         gui.console_textbox_2_addnewline(f"[INFO] New Interface: {nic['interface']} ---> {nic['description']}")
+    
+    if nic_opntion == []:
+        gui.console_textbox_2_addnewline("[WARN] Unable to get interface information")
+        return False
+
     gui.setting_om_int.configure(values=nic_opntion)
+    return True
 
 ## Custom Scan range
 def get_ScanningRangebyActiveInterface():
@@ -76,6 +86,9 @@ def start_custom_icmpping():
 
 ## scanning
 def start_maclookup():
+    if win_commond.check_file("mac-vendors"): 
+        app.update_vendorlist()
+        gui.console_textbox_2_addnewline("[INFO] Vendors List not found, try get on network")
     filename = win_commond.cmd_winsave('arp -a')
     ip2mac_dict = win_commond.sort_win_arp(filename)
     app.ip2mac_dict = ip2mac_dict
@@ -145,15 +158,15 @@ def buttonFunc_startPing():
     threading.Thread(target=scanner_isrunning).start()
 
 def buttonFunc_popupcomfrim():
-    get_all_interface()
-    set_default_interface()
+    if get_all_interface():
+        set_default_interface()
     gui.popupwindow.withdraw()
     gui.deiconify()
 
 def buttonFunc_getnetowrk():
     app.interfaces.clear()
-    get_all_interface()
-    set_default_interface()
+    if get_all_interface():
+        set_default_interface()
 
 def buttonFunc_clean():
     gui.console_textbox_clear()
@@ -177,23 +190,31 @@ def set_infobox(ip, description,netcls):
     elif netcls == 'ERROR': 
         gui.console_textbox_2_addnewline('[WARN] Scan Target error')
         gui.setting_om_int.configure(fg_color='red')
-    gui.cconsole_infobox_addnewline('clear')
-    gui.cconsole_infobox_addnewline("Host:")
-    gui.cconsole_infobox_addnewline(f"{app.hostname}")
-    gui.cconsole_infobox_addnewline("Name:")
-    gui.cconsole_infobox_addnewline(f"{app.active_interface['interface']}")
-    gui.cconsole_infobox_addnewline("Adapter:")
-    gui.cconsole_infobox_addnewline(f"{app.active_interface['description']}")
-    gui.cconsole_infobox_addnewline("IP Address:")
-    gui.cconsole_infobox_addnewline(f"{app.active_interface['ipv4_addr']}")
-    gui.cconsole_infobox_addnewline("MAC:")
-    gui.cconsole_infobox_addnewline(f"{app.active_interface['mac']}")
+
+    text = f"""Host:
+{app.hostname}
+Name:
+{app.active_interface['interface']}
+Adapter:
+{app.active_interface['description']}
+IP Address:
+{app.active_interface['ipv4_addr']}
+MAC:
+{app.active_interface['mac']}"""
+
+    gui.cconsole_infobox_addnewline(text)
     get_ScanningRangebyActiveInterface()
 
 def optionmenu_interface(new_interface: str):
-    ip, description, netcls= app.set_activeinterface(new_interface)
-    set_infobox(ip, description, netcls)
-
+    if new_interface == "Scan Interfaces": 
+        if get_all_interface(): set_default_interface()
+        return
+    try:
+        ip, description, netcls = app.set_activeinterface(new_interface)
+    except Exception as e:
+        print(e)
+    else:
+        set_infobox(ip, description, netcls)
 
 def set_default_interface():
     print("Geting Network Infomation")
@@ -206,10 +227,6 @@ def set_default_interface():
         set_infobox(ip, description, netcls)
         gui.setting_om_int.set(f"{description}  ---> {ip}") 
 
-def buttonFunc_testing():
-    print(app.interfaces)
-    pass
-
 ## defualt labels
 def gui_defualttext():
     gui.confirm_popup(NOTE)
@@ -221,7 +238,7 @@ def gui_defualttext():
     gui.setting_label_intchange.configure(text="Scan Interface") 
     gui.setting_om_int.configure(values=["Scan Interfaces"], command=optionmenu_interface) 
     gui.cbox_customscan.configure(text='Custom Scan Range')
-    gui.setting_om_int.set("Select Interface") 
+    gui.setting_om_int.set("No Interface with IP") 
     gui.cbox_detail.configure(text="MAC Lookup")
     gui.cbox_http.configure(text="HTTP Scan")
     gui.cbox_https.configure(text="HTTPS Scan")
@@ -245,7 +262,7 @@ def gui_linkbutton():
     gui.protocol("WM_DELETE_WINDOW", killall)
 
 
-NOTE = """Simple Network Scanner for AV Technician BATE v0.84
+NOTE = """Simple Network Scanner for AV Technician BATE v0.85
 Please DO NOT use it in any pulbic network!!!
 USE IT WITH YOUR OWN RISK!!!
 
@@ -256,7 +273,7 @@ bauerj/mac_vendor_lookup
 
 Regards,
 
-Version 0.84
+Version 0.85
 Add optional scan target; Fix unalbe to start cause by fail to catch interfaces information
 Version 0.72
 Clean temp file when quite
@@ -273,7 +290,7 @@ Add support for http and https scan
 
 if __name__ == "__main__":
     threadhandling, nic_list = [], []
-    gui = mainctk.GuiApp(title="Simple Network Scanner for AV Technician BATE v0.84")
+    gui = mainctk.GuiApp(title="Simple Network Scanner for AV Technician BATE v0.85")
     app = scanner.Scanner(guiconsole=gui.console_textbox_2_addnewline)
     gui_defualttext()
     gui_linkbutton()

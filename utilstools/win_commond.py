@@ -1,4 +1,4 @@
-from subprocess import check_output, run
+from subprocess import run,PIPE
 from os import mkdir
 
 from functools import wraps
@@ -13,30 +13,18 @@ def timer_cont(org_func):
         return resulat
     return wrapper
 
-def cmd_pysave(commnad: str, path: str='temp') -> str:
-    if not __mkdir(path):
-        return 
-    filename = commnad.split()[0].strip() + '.txt'
+def cmd_winsave(commnad: str, path: str='temp') -> str:
+    if not __mkdir(path): return None
+    c = commnad.split()
+    filename = c[0]
     try:
-        proc = check_output(commnad).decode('utf-8')
-    except FileNotFoundError:
-        print('[WARN] Command Failed')
-        return
-    else:
-        print('[INFO] Commnad Run Sucessed')
-        with open(f'{path}/{filename}', 'w') as file:
-            file.write(proc)
-        return filename
-
-def cmd_winsave(commnad: str, path: str='temp', shell=True, *args, **kwargs) -> str:
-    if not __mkdir(path):
-        return 
-    filename = commnad.split()[0].strip()
-    try:
-        run(f'{commnad} > {path}/{filename}.txt', shell=shell, *args, **kwargs)
+        # run([commnad, ">", f"{path}/{filename}.txt"])
+        with open(f"{path}/{filename}.txt", "w") as f:
+            run(c, stdout=f, text=True)
+        print(f"{filename} saved, will clear when progreame close")
     except:
         print('[WARN] Command Failed')
-        return
+        return None
     else:
         print('[INFO] Commnad Run Sucessed')
         return filename
@@ -90,6 +78,14 @@ def sort_win_ipconfig(filename: str='ipconfig', path: str='temp') -> list:
     nic_list.append(nic_dict)
     return nic_list
 
+def check_file(filename: str,  path: str='temp') -> bool:
+    try: 
+        open(f"{path}/{filename}.txt", "r").read()
+    except FileNotFoundError:
+        return True
+    except UnicodeDecodeError:
+        return False
+    return True
 
 def sort_win_arp(filename: str='arp', path: str='temp') -> dict:
     import re
@@ -107,15 +103,12 @@ def sort_win_arp(filename: str='arp', path: str='temp') -> dict:
             ip2mac_dict[ip] = mac 
     return ip2mac_dict
 
+
+
 if __name__ == '__main__':
 
-    filename = cmd_winsave('ipconfig /all')
-    nic_list = sort_win_ipconfig(filename)
-    for nic in nic_list:
-        print(nic)
-    print('***')
-    for _ in range(len(nic_list)):
-        nic = nic_list.pop(0)
-        if 'ipv4_addr' in nic: print(nic)
     
-    input()
+    l = sort_win_arp(cmd_winsave("arp -a"))
+    print(l)
+    # a = check_file("mac-vendors")
+    # run(["ipconfig", "/all"])

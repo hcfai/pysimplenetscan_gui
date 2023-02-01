@@ -9,6 +9,7 @@ MAC_PATTERN = compile(r'(([0-9a-fA-F]){2}[-:]){5}([0-9a-fA-F]){2}')
 
 class Scanner():
     def __init__(self, guiconsole: None) -> None:
+        self.maclookup = MacLookup()
         if guiconsole != None:
             self.guiconsole = guiconsole
         self.scanning = False
@@ -70,7 +71,6 @@ class Scanner():
 
     ## MAC Address lookup
     def get_mac(self) -> str:
-        maclookup = MacLookup()
         BaseMacLookup.cache_path = "temp/mac-vendors.txt"
         for _ in range(len(self.reponded_hosts)):
             host = self.reponded_hosts.pop(0)
@@ -82,7 +82,7 @@ class Scanner():
                 mac = self.active_interface['mac']
             else: mac = None
             self.guiconsole(f"[INFO] {ip} --> {mac}")
-            vendor = self.get_vendor(mac,maclookup)
+            vendor = self.get_vendor(mac,self.maclookup)
             host['mac'] = mac
             host['vendor'] = vendor
             self.reponded_hosts.append(host)
@@ -99,10 +99,10 @@ class Scanner():
             return vendor
 
     # @staticmethod
-    def update_vendorlist(self, maclookup: MacLookup):
+    def update_vendorlist(self,):
         try:
             self.guiconsole("[WARN]Try Update Vendor List")
-            maclookup.update_vendors()
+            self.maclookup.update_vendors()
         except:
             self.guiconsole("[WARN] Not Internet Connections; Vendors List Update Filed")
             pass
